@@ -2,7 +2,7 @@
 import rospy
 import numpy as np
 from geometry_msgs.msg import Twist
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32MultiArray, Float32
 
 
 #########################################
@@ -18,6 +18,9 @@ class slash_controller(object):
 
         # Init publishers
         self.pub_cmd    = rospy.Publisher("prop_cmd", Twist , queue_size=1)
+        self.pub_pos    = rospy.Publisher("car_pos", Float32 , queue_size=1)
+        self.pub_vel    = rospy.Publisher("car_vel", Float32 , queue_size=1)
+
         
         # Timer
         self.dt         = 0.05
@@ -109,7 +112,7 @@ class slash_controller(object):
 
                 self.steering_cmd   = u[1] + self.steering_offset
                 self.propulsion_cmd = u[0]     
-                self.arduino_mode   = 0    # Mode ??? on arduino
+                self.arduino_mode   = 5    # Mode ??? on arduino
                 # TODO: COMPLETEZ LE CONTROLLER
                 #########################################################
                 
@@ -132,7 +135,7 @@ class slash_controller(object):
 
                 self.steering_cmd   = u[1] + self.steering_offset
                 self.propulsion_cmd = u[0]     
-                self.arduino_mode   = 0 # Mode ??? on arduino
+                self.arduino_mode   = 6 # Mode ??? on arduino
                 # TODO: COMPLETEZ LE CONTROLLER
                 #########################################################
                 
@@ -204,6 +207,19 @@ class slash_controller(object):
         # Read feedback from arduino
         self.velocity       = msg.data[1]
         self.position       = msg.data[0]
+
+        pos_msg = Float32()
+        pos_msg.data = self.position
+        self.pub_pos.publish(pos_msg)
+
+        vel_msg = Float32()
+        vel_msg.data = self.velocity
+        self.pub_vel.publish(vel_msg)
+
+        print "Position:"
+        print str(self.position)
+        print "Velocity:"
+        print str(self.velocity)
         
     ##########################################################################################
     def send_arduino(self):

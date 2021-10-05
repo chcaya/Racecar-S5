@@ -4,7 +4,7 @@
   <arg name="joy_port"     default="js0"/>    <!-- for /dev/input/js0 -->
   <arg name="joy_ps4"      default="false"/>
 
-  <arg name="max_vel"      default="6"/>
+  <arg name="max_vel"      default="2"/>
   <arg name="max_angle"    default="40"/>
 
   <arg name="prefix"       default="racecar"/>
