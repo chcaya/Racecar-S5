@@ -375,7 +375,7 @@ void ctl(){
     pos_error      = pos_ref - pos_now;
     pos_last_error = pos_ref - pos_old;
     pos_error_int  += pos_error * time_step_low;
-    pos_error_ddt  = pos_error - pos_last_error;
+    pos_error_ddt  = (pos_error - pos_last_error)/time_step_low;
 
     // Anti wind-up
     if ( pos_error_int > pos_ei_sat ){

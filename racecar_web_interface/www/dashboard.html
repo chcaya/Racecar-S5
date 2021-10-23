@@ -1,0 +1,311 @@
+<!doctype html>
+<html>
+<!-- 
+==References==
+Server-side:
+* http://docs.ros.org/indigo/api/roswww/html/
+* http://wiki.ros.org/web_video_server
+* http://wiki.ros.org/rosbridge_suite/Tutorials/RunningRosbridge
+
+Client-side:
+* http://wiki.ros.org/roslibjs/Tutorials/BasicRosFunctionality
+* https://getbootstrap.com/docs/4.0/getting-started/introduction/
+* https://getbootstrap.com/docs/4.0/layout/grid/
+-->
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> -->
+
+    <!-- Bootstrap CSS -->
+    <!-- <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/dashboard.css"> -->
+
+    <title>Racecar - Dashboard</title>
+
+    <style>
+      :root
+      {
+        --bgImg: url('http://10.42.0.1:8080/stream?topic=/racecar/raspicam_node/image&type=ros_compressed');
+      }
+
+      html, body {
+        height: 100%;
+        margin: 0;
+      }
+
+      body
+      {
+        /* background-image: url('http://localhost:8080/stream?topic=/racecar/raspicam_node/image&type=ros_compressed'); */
+        background-image: var(--bgImg);
+        background-repeat: no-repeat;
+        background-position: center;
+        background-attachment: fixed;
+        background-size: 100% 100%;
+      }
+
+      .flex-container
+      {
+        display: flex;
+        justify-content: space-around;;
+        align-items: center;
+        align-content: center;
+        flex-wrap: nowrap;
+        height: 100%;
+      }
+
+      .col-status
+      {
+        align-self: flex-end;
+        text-align: center;
+      }
+
+      /* The slider itself */
+      .slider {
+        -webkit-appearance: none;  /* Override default CSS styles */
+        appearance: none;
+        width: 300px; /* Full-width */
+        height: 25px; /* Specified height */
+        background: #d3d3d3; /* Grey background */
+        outline: none; /* Remove outline */
+        opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+        -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+        transition: opacity .2s;
+      }
+
+      /* Mouse-over effects */
+      .slider:hover {
+        opacity: 1; /* Fully shown on mouse-over */
+      }
+
+      /* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+      .slider::-webkit-slider-thumb {
+        -webkit-appearance: none; /* Override default look */
+        appearance: none;
+        width: 25px; /* Set a specific slider handle width */
+        height: 25px; /* Slider handle height */
+        background: #04AA6D; /* Green background */
+        cursor: pointer; /* Cursor on hover */
+      }
+
+      .slider::-moz-range-thumb {
+        width: 25px; /* Set a specific slider handle width */
+        height: 25px; /* Slider handle height */
+        background: #04AA6D; /* Green background */
+        cursor: pointer; /* Cursor on hover */
+      }
+
+      #speed {
+        transform: rotateZ(270deg);
+      }
+
+      #status_text
+      {
+        color: rgb(255, 0, 0);
+        background: transparent;
+        border: none;
+        outline: none;
+        text-align: justify;
+        text-align-last: center;
+      }
+
+      #xButton
+      {
+        margin-top: 2px;
+        margin-right: 2px;
+        position: absolute;
+        top: 0;
+        right: 0;
+        z-index: 2;
+      }
+
+      #opaque
+      {
+        position: fixed;
+        top: 0px;
+        left: 0px;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        background-color: black;
+        opacity: 0.8;
+      }
+    </style>
+</head>
+
+<body>
+  <!-- Main layout BEGIN-->
+  <div id="opaque"></div>
+  <input id="xButton" type="button" value="X" onclick="xButtonCB();">
+  <div class="flex-container">
+    <div class="col-slide">
+      <input type="range" min="-200" max="200" value="0" class="slider" id="speed" orient="vertical">
+    </div>
+    <div class="col-status">
+      <h3 style="color:rgb(255, 0, 0);">Status</h3>
+      <textarea id="status_text" name="status_text" readonly rows="3" cols="48"></textarea>
+    </div>
+    <div class="col-slide">
+      <input type="range" min="-370" max="370" value="0" class="slider" id="steer">
+    </div>
+  </div>
+  <!-- Main layout END-->
+  
+  <!-- JavaScript, import frameworks -->
+  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <script src="js/jquery-3.3.1.slim.min.js"></script>
+  <script src="js/popper.min.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+  <script src="js/roslib.min.js"></script> <!-- rosbridge -->
+  <script src="JoyStick-master/joy.js"></script>
+
+
+  <!-- Custom scripts -->
+  <script>
+      // Define some global variables
+      var rbServer = null;
+      var cmdVelTopic = null;
+      var isRosOk = false;
+
+      var root = document.querySelector(':root');
+
+      var sliderSpeed = document.getElementById("speed");
+      var sliderSteer = document.getElementById("steer");
+      var speed = 0;
+      var steer = 0;
+
+      sliderSpeed.oninput = function() {
+        speed = this.value;
+      }
+
+      sliderSteer.oninput = function() {
+        steer = this.value;
+      } 
+
+      //Some initializations after the page has been shown
+      $(document).ready(function(){
+        //document.getElementById("log").value = 'Default text\n'
+      });
+
+      function xButtonCB()
+      {
+        isRosOk = false;
+        location.href = "/racecar_web_interface";
+      }
+
+      function getIP () {
+        return sessionStorage.getItem("IP");
+      
+        // (EXTRA) TO CLEAR
+        // sessionStorage.removeItem("KEY");
+        // sessionStorage.clear();
+      }
+
+      function getUser () {
+        return sessionStorage.getItem("USER");
+      }
+
+      function dim(bool)
+      {
+        document.getElementById('opaque').style.display=(bool?'block':'none');
+      }
+
+      function updateStatus(isConnected)
+      {
+        document.getElementById('status_text').value = "";
+        document.getElementById('status_text').value += "Username: " + getUser() + '\n';
+        document.getElementById('status_text').value += "IP address: " + getIP() + '\n';
+
+        if(isConnected)
+        {
+          dim(false);
+          document.getElementById('status_text').value += "Connected: True";
+        }
+        else
+        {
+          dim(true);
+          document.getElementById('status_text').value += "Connected: False";
+        }
+      }
+
+      // Define some functions
+      function connectROS() {
+      // This function connects to the rosbridge server
+
+        rbServer = new ROSLIB.Ros({
+          // Assuming ros server IP is 10.42.0.1
+          url : 'ws://' + getIP() + ':9090'
+        });
+
+        rbServer.on('connection', function(){
+          console.log('Connected to websocket server.');
+          isRosOk = true;
+
+          // These lines create a topic object as defined by roslibjs
+          cmdVelTopic = new ROSLIB.Topic({
+            ros : rbServer,
+            name : '/racecar/cmd_vel_abtr_2',
+            messageType : 'geometry_msgs/Twist'
+          });
+
+          updateStatus(true);
+        });
+
+        rbServer.on('error', function(error) {
+          console.log('Error connecting to websocket server: ', error);
+          isRosOk = false;
+
+          updateStatus(false);
+        });
+
+        rbServer.on('close', function() {
+          console.log('Connection to websocket server closed.');
+          isRosOk = false;
+
+          updateStatus(false);
+        });
+      }
+
+      root.style.setProperty('--bgImg', "url('http://" + getIP() + ":8080/stream?topic=/racecar/raspicam_node/image&type=ros_compressed')");
+
+      updateStatus(false);
+
+      connectROS();
+
+      // These lines create a message that conforms to the structure of the Twist defined in our ROS installation
+      // It initalizes all properties to zero. They will be set to appropriate values before we publish this message.
+      var twist = new ROSLIB.Message({
+        linear : {
+          x : 0.0,
+          y : 0.0,
+          z : 0.0
+        },
+        angular : {
+          x : 0.0,
+          y : 0.0,
+          z : 0.0
+        }
+      });
+
+      //Publishing loop cmd_vel at 5 Hz
+      setInterval(function(){
+        if(cmdVelTopic != null)
+        {
+          if(isRosOk)
+          {
+            twist.linear.x = speed/100;
+            twist.angular.z = -steer/1000;
+            cmdVelTopic.publish(twist);
+          }
+          else
+          {
+            twist.linear.x = 0;
+            twist.angular.z = 0;
+            cmdVelTopic.publish(twist);
+          }
+        }
+      }, 200);
+  </script>
+</body>
+</html>
