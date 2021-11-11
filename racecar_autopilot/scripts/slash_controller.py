@@ -29,13 +29,11 @@ class slash_controller(object):
         # Paramters
 
         # Controller        
-        self.steering_offset = 0.0 # To adjust according to the vehicle
+        self.steering_offset = 0.05 # To adjust according to the vehicle
         
-        self.K_autopilot =  np.array([ 0.5383, 0.3162, 0 ],
-                                     [ 0, 0, 9.5369 ]) # TODO: DESIGN LQR
+        self.K_autopilot =  np.array([[ 0, 0, 9.5369 ], [ 0.5383, 0.3162, 0 ]]) # TODO: DESIGN LQR
     
-        self.K_parking   =  np.array([ 0, 0, 1.0 ],
-                                     [ 0.3, 0.0937, 0 ]) # TODO: DESIGN PLACEMENT DE POLES
+        self.K_parking   =  np.array([[ 0, 0, 1.0 ], [ 0.3, 0.0937, 0 ]]) # TODO: DESIGN PLACEMENT DE POLES
         
         # Memory
         
@@ -106,18 +104,14 @@ class slash_controller(object):
                 # r = [ yd, 0, vd ]
                 # u = [ servo_cmd , prop_cmd ]
 
-                x = np.array([self.laser_theta],
-                             [self.laser_y],
-                             [self.velocity])
+                x = np.array([[self.laser_theta], [-self.laser_y], [self.velocity]])
 
-                r = np.array([0], # self.steering_ref
-                             [0],
-                             [2]) # self.propulsion_ref
+                r = np.array([[0], [0], [2]])
                 
                 u = self.controller1( x , r )
 
-                self.steering_cmd   = u[0] + self.steering_offset
-                self.propulsion_cmd = u[1]
+                self.steering_cmd   = -(u[1] + self.steering_offset)
+                self.propulsion_cmd = u[0]
                 self.arduino_mode   = 5    # Mode ??? on arduino
                 # TODO: COMPLETEZ LE CONTROLLER
                 #########################################################
@@ -134,18 +128,24 @@ class slash_controller(object):
                 # r = [ ?,? ,.... ]
                 # u = [ servo_cmd , prop_cmd ]
                 
-                x = np.array([self.laser_theta],
-                             [self.laser_y],
-                             [self.position])
+                x = np.array([[self.laser_theta], [-self.laser_y], [self.position]])
+		print "x:"
+		print x
 
-                r = np.array([0], # self.steering_ref
-                             [0],
-                             [2]) # self.propulsion_ref
+                r = np.array([[0], [0], [4]])
                 
                 u = self.controller2( x , r )
 
-                self.steering_cmd   = u[1] + self.steering_offset
+                self.steering_cmd   = -(u[1])# + self.steering_offset)
+		print "Steering_cmd:"
+		print self.steering_cmd
                 self.propulsion_cmd = u[0]
+		if self.propulsion_cmd > 2:
+			self.propulsion_cmd = 2
+		elif self.propulsion_cmd < -2:
+			self.propulsion_cmd = -2
+		print "Propulsion_cmd:"
+		print self.propulsion_cmd
                 self.arduino_mode   = 6 # Mode ??? on arduino
                 # TODO: COMPLETEZ LE CONTROLLER
                 #########################################################
@@ -227,10 +227,10 @@ class slash_controller(object):
         vel_msg.data = self.velocity
         self.pub_vel.publish(vel_msg)
 
-        print "Position:"
-        print str(self.position)
-        print "Velocity:"
-        print str(self.velocity)
+        #print "Position:"
+        #print str(self.position)
+        #print "Velocity:"
+        #print str(self.velocity)
         
     ##########################################################################################
     def send_arduino(self):

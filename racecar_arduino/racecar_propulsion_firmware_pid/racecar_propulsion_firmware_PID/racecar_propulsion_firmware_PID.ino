@@ -58,13 +58,13 @@ const int dri_dir_pin     = 42; //
 
 // Loop period 
 const unsigned long time_period_low   = 2;    // 500 Hz for internal PID loop
-const float         time_step_low     = ((float) time_period_low) / 1000;
+float         time_step_low     = ((float) time_period_low) / 1000;
 const unsigned long time_period_high  = 10;   // 100 Hz  for ROS communication
 const unsigned long time_period_com   = 1000; // 1000 ms = max com delay (watchdog)
 
 // Controller
 const float filter_rc  =  0.159; // 1/(2*pi*fc) avec fc = 1
-const float alpha      =  time_step_low / (filter_rc + time_step_low);
+float alpha      =  time_step_low / (filter_rc + time_step_low);
 const float vel_kp     =  2.47; 
 const float vel_ki     =  5.19; 
 const float vel_kd     =  0.0;
@@ -418,10 +418,6 @@ void ctl(){
     dri_cmd       = vel_kp * vel_error + vel_ki * vel_error_int;
     
     dri_pwm = cmd2pwm( dri_cmd );
-
-    // reset integral actions
-    vel_error_int = 0;
-    pos_error_int = 0;
   }
   ////////////////////////////////////////////////////////
   else {
