@@ -31,21 +31,23 @@ class slash_controller(object):
         # Controller        
         self.steering_offset = 0.0 # To adjust according to the vehicle
         
-        self.K_autopilot =  None # TODO: DESIGN LQR
+        self.K_autopilot =  np.array([ 0.5383, 0.3162, 0 ],
+                                     [ 0, 0, 9.5369 ]) # TODO: DESIGN LQR
     
-        self.K_parking   =  None # TODO: DESIGN PLACEMENT DE POLES
+        self.K_parking   =  np.array([ 0, 0, 1.0 ],
+                                     [ 0.3, 0.0937, 0 ]) # TODO: DESIGN PLACEMENT DE POLES
         
         # Memory
         
         # References Inputs
         self.propulsion_ref  = 0
         self.steering_ref    = 0
-        self.high_level_mode = 0  # Control mode of this controller node
+        self.high_level_mode = 0 # Control mode of this controller node
         
         # Ouput commands
-        self.propulsion_cmd = 0  # Command sent to propulsion
-        self.arduino_mode   = 0  # Control mode
-        self.steering_cmd   = 0  # Command sent to the steering servo
+        self.propulsion_cmd = 0 # Command sent to propulsion
+        self.arduino_mode   = 0 # Control mode
+        self.steering_cmd   = 0 # Command sent to the steering servo
         
         # Sensings inputs
         self.laser_y        = 0
@@ -53,7 +55,7 @@ class slash_controller(object):
         self.velocity       = 0
         self.position       = 0
         
-        # Filters 
+        # Filters
         self.laser_y_old    = 0
         self.laser_dy_fill  = 0
         
@@ -62,7 +64,7 @@ class slash_controller(object):
         
         # Computation of dy / dt with filtering
         self.laser_dy_fill = 0.9 * self.laser_dy_fill + 0.1 * (self.laser_y - self.laser_y_old) / self.dt
-        self.laser_y_old   = self.laser_y        
+        self.laser_y_old   = self.laser_y
 
         if (self.high_level_mode < 0 ):
             # Full stop mode
@@ -71,7 +73,6 @@ class slash_controller(object):
             self.steering_cmd   = 0  # Command sent to the steering servo
             
         else:
-
             # APP2 (open-loop steering) Controllers Bellow          
             if  ( self.high_level_mode == 1 ):
                 # Open-Loop
@@ -84,7 +85,7 @@ class slash_controller(object):
                 # Closed-loop velocity on arduino
                 self.propulsion_cmd = self.propulsion_ref
                 self.arduino_mode   = 2  
-                self.steering_cmd   = self.steering_ref + self.steering_offset 
+                self.steering_cmd   = self.steering_ref + self.steering_offset
                 
             elif ( self.high_level_mode == 2 ):
                 # Closed-loop position on arduino
@@ -93,7 +94,7 @@ class slash_controller(object):
                 self.steering_cmd   = self.steering_ref + self.steering_offset
             
             # APP4 (closed-loop steering) controllers bellow
-            elif ( self.high_level_mode == 3 or self.high_level_mode == 5  ):
+            elif ( self.high_level_mode == 3 or self.high_level_mode == 5 ):
                 # Closed-loop velocity and steering
             
                 #########################################################
@@ -101,17 +102,22 @@ class slash_controller(object):
                 
                 # Auto-pilot # 1 
                 
-                # x = [ ?,? ,.... ]
-                # r = [ ?,? ,.... ]
+                # x = [ y, theta, v ]
+                # r = [ yd, 0, vd ]
                 # u = [ servo_cmd , prop_cmd ]
 
-                x = None
-                r = None
+                x = np.array([self.laser_theta],
+                             [self.laser_y],
+                             [self.velocity])
+
+                r = np.array([0], # self.steering_ref
+                             [0],
+                             [2]) # self.propulsion_ref
                 
                 u = self.controller1( x , r )
 
-                self.steering_cmd   = u[1] + self.steering_offset
-                self.propulsion_cmd = u[0]     
+                self.steering_cmd   = u[0] + self.steering_offset
+                self.propulsion_cmd = u[1]
                 self.arduino_mode   = 5    # Mode ??? on arduino
                 # TODO: COMPLETEZ LE CONTROLLER
                 #########################################################
@@ -128,13 +134,18 @@ class slash_controller(object):
                 # r = [ ?,? ,.... ]
                 # u = [ servo_cmd , prop_cmd ]
                 
-                x = None
-                r = None
+                x = np.array([self.laser_theta],
+                             [self.laser_y],
+                             [self.position])
+
+                r = np.array([0], # self.steering_ref
+                             [0],
+                             [2]) # self.propulsion_ref
                 
                 u = self.controller2( x , r )
 
                 self.steering_cmd   = u[1] + self.steering_offset
-                self.propulsion_cmd = u[0]     
+                self.propulsion_cmd = u[0]
                 self.arduino_mode   = 6 # Mode ??? on arduino
                 # TODO: COMPLETEZ LE CONTROLLER
                 #########################################################
@@ -142,15 +153,15 @@ class slash_controller(object):
             elif ( self.high_level_mode == 6 ):
                 # Reset encoders
                 self.propulsion_cmd = 0
-                self.arduino_mode   = 4  
-                self.steering_cmd   = 0  
+                self.arduino_mode   = 4
+                self.steering_cmd   = 0
 
                 
             elif ( self.high_level_mode == 7 ):
                 # Template for custom controllers
             
                 self.steering_cmd   = 0 + self.steering_offset
-                self.propulsion_cmd = 0     
+                self.propulsion_cmd = 0
                 self.arduino_mode   = 0 # Mode ??? on arduino 
                 
                 
@@ -158,31 +169,31 @@ class slash_controller(object):
                 # Template for custom controllers
             
                 self.steering_cmd   = 0 + self.steering_offset
-                self.propulsion_cmd = 0    
+                self.propulsion_cmd = 0
                 self.arduino_mode   = 0 # Mode ??? on arduino
         
         self.send_arduino()
 
         
     #######################################
-    def controller1(self, y , r):
+    def controller1(self, x, r):
 
         # Control Law TODO
 
-        u = np.array([ 0 , 0 ]) # placeholder
+        # u = np.array([ 0 , 0 ]) # placeholder
         
-        #u = np.dot( self.K_autopilot , (r - x) )
+        u = np.dot( self.K_autopilot , (r - x) )
         
         return u
 
     #######################################
-    def controller2(self, y , r ):
+    def controller2(self, x , r ):
 
         # Control Law TODO
 
-        u = np.array([ 0 , 0 ]) # placeholder
+        # u = np.array([ 0 , 0 ]) # placeholder
         
-        #u = np.dot( self.K_parking , (r - x) )
+        u = np.dot( self.K_parking , (r - x) )
         
         return u
 
@@ -231,7 +242,7 @@ class slash_controller(object):
       cmd_prop.linear.x  = self.propulsion_cmd   # Command sent to propulsion
       cmd_prop.linear.z  = self.arduino_mode     # Control mode
 
-      cmd_prop.angular.z = self.steering_cmd #Command sent to the steering servo
+      cmd_prop.angular.z = self.steering_cmd # Command sent to the steering servo
 
       # Publish cmd msg
       self.pub_cmd.publish(cmd_prop)

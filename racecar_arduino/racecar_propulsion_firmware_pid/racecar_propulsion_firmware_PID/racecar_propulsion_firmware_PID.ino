@@ -328,6 +328,7 @@ void ctl(){
     // return y
   //TODO: VOUS DEVEZ COMPLETEZ LA DERIVEE FILTRE ICI
   float vel_raw = ((enc_now - enc_old) * tick2m) / time_step_low;
+  alpha = time_step_low / (filter_rc + time_step_low);
   vel_fil = alpha * vel_raw + (1-alpha) * vel_fil;
 
   // Propulsion Controllers
@@ -396,16 +397,37 @@ void ctl(){
     clearEncoderCount();
     
     // reset integral actions
-    vel_error_int = 0 ;
-    pos_error_int = 0 ;
+    vel_error_int = 0;
+    pos_error_int = 0;
     
-    dri_pwm    = pwm_zer_dri;
+    dri_pwm = pwm_zer_dri;
+  }
+  else if (ctl_mode == 5){    
+    dri_pwm = cmd2pwm( dri_ref );
+
+    // reset integral actions
+    vel_error_int = 0;
+    pos_error_int = 0;
+  }
+  else if (ctl_mode == 6){
+    float vel_ref, vel_error;
+
+    vel_ref       = dri_ref;
+    vel_error     = vel_ref - vel_fil;
+    vel_error_int += vel_error * time_step_low;
+    dri_cmd       = vel_kp * vel_error + vel_ki * vel_error_int;
+    
+    dri_pwm = cmd2pwm( dri_cmd );
+
+    // reset integral actions
+    vel_error_int = 0;
+    pos_error_int = 0;
   }
   ////////////////////////////////////////////////////////
   else {
     // reset integral actions
-    vel_error_int = 0 ;
-    pos_error_int = 0 ;
+    vel_error_int = 0;
+    pos_error_int = 0;
     
     dri_pwm    = pwm_zer_dri;
   }
@@ -489,10 +511,10 @@ void loop(){
   ///////////////////////////////////////
 
   if (( time_now - time_last_low ) > time_period_low ) {
-    
-    ctl(); // one control tick
 
-    time_last_low = time_now ;
+    time_step_low = ((float) (time_now - time_last_low)) / 1000;
+    ctl(); // one control tick
+    time_last_low = time_now;
   }
 
   ////////////////////////////////////////
