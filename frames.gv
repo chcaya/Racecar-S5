@@ -1,0 +1,21 @@
+digraph G {
+"racecar/base_footprint" -> "racecar/base_link"[label="Broadcaster: /racecar/robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1736.983 sec old)\nBuffer length: 0.000 sec\n"];
+"racecar/odom" -> "racecar/base_footprint"[label="Broadcaster: /racecar/gazebo_odometry_node\nAverage rate: 50.287 Hz\nMost recent transform: 1736.983 ( 0.000 sec old)\nBuffer length: 3.480 sec\n"];
+"racecar/base_link" -> "racecar/chassis"[label="Broadcaster: /racecar/robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1736.983 sec old)\nBuffer length: 0.000 sec\n"];
+"racecar/chassis" -> "racecar/camera_link"[label="Broadcaster: /racecar/robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1736.983 sec old)\nBuffer length: 0.000 sec\n"];
+"racecar/camera_link" -> "racecar/camera_optical_link"[label="Broadcaster: /racecar/robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1736.983 sec old)\nBuffer length: 0.000 sec\n"];
+"racecar/chassis" -> "racecar/chassis_inertia"[label="Broadcaster: /racecar/robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1736.983 sec old)\nBuffer length: 0.000 sec\n"];
+"racecar/chassis" -> "racecar/base_laser"[label="Broadcaster: /racecar/robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1736.983 sec old)\nBuffer length: 0.000 sec\n"];
+"racecar/base_laser" -> "racecar/imu_link"[label="Broadcaster: /racecar/robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1736.983 sec old)\nBuffer length: 0.000 sec\n"];
+"racecar/map" -> "racecar/odom"[label="Broadcaster: /racecar/rtabmap\nAverage rate: 20.296 Hz\nMost recent transform: 1737.043 ( -0.060 sec old)\nBuffer length: 3.449 sec\n"];
+"racecar/left_steering_hinge" -> "racecar/left_front_wheel"[label="Broadcaster: /racecar/robot_state_publisher\nAverage rate: 50.292 Hz\nMost recent transform: 1736.923 ( 0.060 sec old)\nBuffer length: 3.420 sec\n"];
+"racecar/chassis" -> "racecar/left_steering_hinge"[label="Broadcaster: /racecar/robot_state_publisher\nAverage rate: 50.292 Hz\nMost recent transform: 1736.923 ( 0.060 sec old)\nBuffer length: 3.420 sec\n"];
+"racecar/chassis" -> "racecar/left_rear_wheel"[label="Broadcaster: /racecar/robot_state_publisher\nAverage rate: 50.292 Hz\nMost recent transform: 1736.923 ( 0.060 sec old)\nBuffer length: 3.420 sec\n"];
+"racecar/right_steering_hinge" -> "racecar/right_front_wheel"[label="Broadcaster: /racecar/robot_state_publisher\nAverage rate: 50.292 Hz\nMost recent transform: 1736.923 ( 0.060 sec old)\nBuffer length: 3.420 sec\n"];
+"racecar/chassis" -> "racecar/right_steering_hinge"[label="Broadcaster: /racecar/robot_state_publisher\nAverage rate: 50.292 Hz\nMost recent transform: 1736.923 ( 0.060 sec old)\nBuffer length: 3.420 sec\n"];
+"racecar/chassis" -> "racecar/right_rear_wheel"[label="Broadcaster: /racecar/robot_state_publisher\nAverage rate: 50.292 Hz\nMost recent transform: 1736.923 ( 0.060 sec old)\nBuffer length: 3.420 sec\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 1736.983"[ shape=plaintext ] ;
+ }->"racecar/map";
+}

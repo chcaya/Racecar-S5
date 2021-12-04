@@ -31,9 +31,9 @@ class slash_controller(object):
         # Controller        
         self.steering_offset = 0.05 # To adjust according to the vehicle
         
-        self.K_autopilot =  np.array([[ 0, 0, 9.5369 ], [ 0.5383, 0.3162, 0 ]]) # TODO: DESIGN LQR
+        self.K_autopilot =  np.array([[ 0, 0, 9.5369 ], [ 0.5383, 0.3162, 0 ]])
     
-        self.K_parking   =  np.array([[ 0, 0, 1.0 ], [ 0.3, 0.0937, 0 ]]) # TODO: DESIGN PLACEMENT DE POLES
+        self.K_parking   =  np.array([[ 0, 0, 1.0 ], [ 0.3, 0.0937, 0 ]])
         
         # Memory
         
@@ -112,7 +112,7 @@ class slash_controller(object):
 
                 self.steering_cmd   = -(u[1] + self.steering_offset)
                 self.propulsion_cmd = u[0]
-                self.arduino_mode   = 5    # Mode ??? on arduino
+                self.arduino_mode   = 5
                 # TODO: COMPLETEZ LE CONTROLLER
                 #########################################################
                 
@@ -129,24 +129,17 @@ class slash_controller(object):
                 # u = [ servo_cmd , prop_cmd ]
                 
                 x = np.array([[self.laser_theta], [-self.laser_y], [self.position]])
-		print "x:"
-		print x
-
                 r = np.array([[0], [0], [4]])
                 
                 u = self.controller2( x , r )
 
-                self.steering_cmd   = -(u[1])# + self.steering_offset)
-		print "Steering_cmd:"
-		print self.steering_cmd
+                self.steering_cmd   = -u[1]
                 self.propulsion_cmd = u[0]
-		if self.propulsion_cmd > 2:
-			self.propulsion_cmd = 2
-		elif self.propulsion_cmd < -2:
-			self.propulsion_cmd = -2
-		print "Propulsion_cmd:"
-		print self.propulsion_cmd
-                self.arduino_mode   = 6 # Mode ??? on arduino
+                if self.propulsion_cmd > 2:
+                    self.propulsion_cmd = 2
+                elif self.propulsion_cmd < -2:
+                    self.propulsion_cmd = -2
+                self.arduino_mode = 6
                 # TODO: COMPLETEZ LE CONTROLLER
                 #########################################################
                 
@@ -177,10 +170,6 @@ class slash_controller(object):
         
     #######################################
     def controller1(self, x, r):
-
-        # Control Law TODO
-
-        # u = np.array([ 0 , 0 ]) # placeholder
         
         u = np.dot( self.K_autopilot , (r - x) )
         
@@ -188,10 +177,6 @@ class slash_controller(object):
 
     #######################################
     def controller2(self, x , r ):
-
-        # Control Law TODO
-
-        # u = np.array([ 0 , 0 ]) # placeholder
         
         u = np.dot( self.K_parking , (r - x) )
         
