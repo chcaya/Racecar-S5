@@ -32,12 +32,12 @@ class BlobDetector:
         # see https://www.geeksforgeeks.org/find-circles-and-ellipses-in-an-image-using-opencv-python/
         #     https://docs.opencv.org/3.4/d0/d7a/classcv_1_1SimpleBlobDetector.html
         
-        params.thresholdStep = 10;
-        params.minThreshold = 50;
-        params.maxThreshold = 220;
-        params.minRepeatability = 2;
-        params.minDistBetweenBlobs = 10;
-        
+        params.thresholdStep = 10
+        params.minThreshold = 50
+        params.maxThreshold = 220
+        params.minRepeatability = 2
+        params.minDistBetweenBlobs = 10
+
         # Set Color filtering parameters 
         params.filterByColor = False
         params.blobColor = 255
@@ -66,6 +66,7 @@ class BlobDetector:
         
         self.image_pub = rospy.Publisher('image_detections', Image, queue_size=1)
         self.object_pub = rospy.Publisher('object_detected', String, queue_size=1)
+        self.object_coords_pub = rospy.Publisher('/racecar/object_coords', Pose, queue_size=1)
         
         self.image_sub = message_filters.Subscriber('image', Image)
         self.depth_sub = message_filters.Subscriber('depth', Image)
@@ -157,7 +158,7 @@ class BlobDetector:
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException, tf2_ros.TransformException) as e:
                 print(e)
                 return
-            (transMap, rotMap) = multiply_transforms((transMap, rotMap), (transObj, rotObj))
+            (transMap, rotMap) = multiply_transforms(transMap, rotMap, transObj, rotObj)
             
             # Compute object pose in base frame
             try:
@@ -166,10 +167,18 @@ class BlobDetector:
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException, tf2_ros.TransformException) as e:
                 print(e)
                 return
-            (transBase, rotBase) = multiply_transforms((transBase, rotBase), (transObj, rotObj))
+            (transBase, rotBase) = multiply_transforms(transBase, rotBase, transObj, rotObj)
             
             distance = np.linalg.norm(transBase[0:2])
             angle = np.arcsin(transBase[1]/transBase[0])
+
+            object_coords = Pose()
+            object_coords.position.x = transMap[0]
+            object_coords.position.y = transMap[1]
+            object_coords.position.z = distance
+            object_coords.orientation.z = angle
+
+            self.object_coords_pub.publish(object_coords)
             
             rospy.loginfo("Object detected at [%f,%f] in %s frame! Distance and direction from robot: %fm %fdeg.", transMap[0], transMap[1], self.map_frame_id, distance, angle*180.0/np.pi)
 

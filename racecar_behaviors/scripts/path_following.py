@@ -2,12 +2,15 @@
 
 import rospy
 import math
+import cv2
 import numpy as np
+from cv_bridge import CvBridge
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import Pose, PoseStamped
+from sensor_msgs.msg import Image
 from move_base_msgs.msg import MoveBaseActionGoal, MoveBaseActionFeedback, MoveBaseActionResult
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from libbehaviors import *
@@ -26,6 +29,8 @@ class PathFollowing:
         self._goal = [13.5, 2.1, math.pi, self._id_goal]
         self._detected_objects = []
         self._object_data = [0, 0, 0, 0]
+        self._cvbridge = CvBridge()
+        self._image = None
 
         self._tf_listener = tf.TransformListener()
 
@@ -41,6 +46,8 @@ class PathFollowing:
         self.mb_feedback_sub = rospy.Subscriber('/racecar/move_base/feedback', MoveBaseActionFeedback, self.mb_feedback_cb, queue_size=1)
         self.mb_result_sub = rospy.Subscriber('/racecar/move_base/result', MoveBaseActionResult, self.mb_result_cb, queue_size=1)
         self.obj_coords_sub = rospy.Subscriber('/racecar/object_coords', Pose, self.obj_coords_cb, queue_size=1)
+        self.cam_sub = rospy.Subscriber('/racecar/raspicam_node/image', Image, self.cam_cb, queue_size=1)
+
 
         # self.get_map()
 
@@ -202,6 +209,9 @@ class PathFollowing:
                 # rospy.loginfo("Pose:")
                 # rospy.loginfo(self._pose)
                 self._detected_objects.append(self._object_data.copy())
+                cv_image = self._cvbridge.imgmsg_to_cv2(self._image, desired_encoding='passthrough')
+                rospy.loginfo("Registered image:")
+                rospy.loginfo(cv2.imwrite("pic.png", cv_image))
                 rospy.sleep(5)
 
             self.send_goal(self._goal)
@@ -259,6 +269,9 @@ class PathFollowing:
         #     self.send_goal(self._pose)
         #     rospy.sleep(5.)
         #     self.send_goal(self._goal)
+
+    def cam_cb(self, msg):
+        self._image = msg
 
     def run(self):
         while self.goal_pub.get_num_connections() == 0:
