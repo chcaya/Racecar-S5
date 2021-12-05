@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-  <arg name="odom_fusion"   default="false"/> <!-- APP5: Use robot_localization pkg for odometry -->
+  <arg name="odom_fusion"   default="true"/> <!-- APP5: Use robot_localization pkg for odometry -->
 
   <arg name="joy_port"     default="js0"/>    <!-- for /dev/input/js0 -->
   <arg name="joy_ps4"      default="false"/>
