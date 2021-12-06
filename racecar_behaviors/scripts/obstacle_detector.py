@@ -43,7 +43,7 @@ class ObstacleDetector:
 
             if not stuck:
                 twist.linear.x = -self.max_speed
-                twist.angular.z = self._pose[2]
+                twist.angular.z = 0 #self._pose[2]
                 rospy.loginfo("Backing up!")
 
             else:

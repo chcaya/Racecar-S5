@@ -26,11 +26,12 @@ class PathFollowing:
         self._id_goal = "id_goal"
         self._id_start = "id_start"
         self._id_obj = "id_obj"
-        self._goal = [10, 0.5, math.pi, self._id_goal]
+        self._goal = [9.7, -3.0, math.pi, self._id_goal]
         self._detected_objects = []
         self._object_data = [0, 0, 0, 0]
         self._cvbridge = CvBridge()
         self._image = None
+        self._detections = 0
 
         self._tf_listener = tf.TransformListener()
 
@@ -160,7 +161,7 @@ class PathFollowing:
         rospy.loginfo(goal)
 
         self.goal_pub.publish(goal_msg)
-
+object_details
     def mb_feedback_cb(self, msg):
         self._pose[0] = msg.feedback.base_position.pose.position.x
         self._pose[1] = msg.feedback.base_position.pose.position.y
@@ -212,11 +213,25 @@ class PathFollowing:
                 cv_image = self._cvbridge.imgmsg_to_cv2(self._image, desired_encoding='passthrough')
                 rospy.loginfo("Registered image:")
                 rospy.loginfo(cv2.imwrite("pic.png", cv_image))
+                self._detections = 0
                 rospy.sleep(5)
 
             self.send_goal(self._goal)
 
     def obj_coords_cb(self, msg):
+        self._detections += 1
+        
+        if self._detections < 3:
+            twist = Twist()
+            twist.linear.x = 0
+            twist.angular.z = 0
+               
+            self.cmd_vel_pub.publish(twist)
+            return
+            
+        self._detections = 0
+            
+        
         obj_buffer = 1.5
 
         # obj_map_x = msg.position.x
