@@ -7,7 +7,7 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 import numpy as np
 from geometry_msgs.msg import Twist, Pose
-from move_base_msgs.msg import MoveBaseActionGoal
+from move_base_msgs.msg import MoveBaseActionGoal, MoveBaseActionFeedback
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry
 from nav_msgs.srv import GetMap
@@ -24,6 +24,7 @@ class Debris_Photography:
         self._origin = None
         self._reverseBrushfireMap = None
         self._map_loaded = False
+        self._pose = [0, 0, 0]
         self.max_speed = rospy.get_param('~max_speed', 0.4)
         self.max_steering = rospy.get_param('~max_steering', 0.37)
 
@@ -32,7 +33,11 @@ class Debris_Photography:
         self.debris_pos = rospy.Subscriber('/racecar/object_coords', Pose, self.debris_callback, queue_size=1)
         self.cam_sub = rospy.Subscriber('/racecar/raspicam_node/image', Image, self.cam_cb, queue_size=1)
         self.map_sub = rospy.Subscriber('map', OccupancyGrid, self.map_callback, queue_size=1)
+        self.mb_feedback_sub = rospy.Subscriber('/racecar/move_base/feedback', MoveBaseActionFeedback, self.mb_feedback_cb, queue_size=1)
 
+        f = open("output_directory/Report.txt", "w")
+        f.write("x y photo.png trajectory.bmp\n")
+        f.close()
 
         # prefix = "racecar"
         # rospy.wait_for_service(prefix + '/get_map')
@@ -64,7 +69,7 @@ class Debris_Photography:
         if abs(angle) < 0.15 and distance < 1.9:
             rospy.loginfo("New object")
             id = len(self.objects)
-            obj_orig = [10*y + self._origin[0], 10*x + self._origin[1]]
+            obj_orig = [10*self._pose[1] + self._origin[0], 10*self._pose[0] + self._origin[1]]
             # obj_orig = [10*x, 10*y]
             # start = [37, 84]
             # end = [51, 211]
@@ -147,6 +152,15 @@ class Debris_Photography:
             self._map_loaded = True
 
             # map_debug(grid, self._reverseBrushfireMap ,self._reverseBrushfireMap, self._reverseBrushfireMap)
+
+    def mb_feedback_cb(self, msg):
+        self._pose[0] = msg.feedback.base_position.pose.position.x
+        self._pose[1] = msg.feedback.base_position.pose.position.y
+
+        ori_list = [msg.feedback.base_position.pose.orientation.x, msg.feedback.base_position.pose.orientation.y,\
+                    msg.feedback.base_position.pose.orientation.z, msg.feedback.base_position.pose.orientation.w]
+        (roll, pitch, yaw) = euler_from_quaternion (ori_list)
+        self._pose[2] = yaw
 
 
 

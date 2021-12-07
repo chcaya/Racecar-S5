@@ -147,26 +147,28 @@ def a_star(reverseBrushfireMap, float_start, float_end):
         #     if is_neighbour_clear(element, next_list, reverseBrushfireMap, [element[0], element[1]-1], unknown, end):
         #         break
         #     i += 1
-        shift_x = 1
-        if end[0] - start[0] > 0:
-            shift_x = -1
 
-        shift_y = 1
-        if end[1] - start[1] > 0:
-            shift_y = -1
+        
+        # shift_x = 1
+        # if end[0] - start[0] > 0:
+        #     shift_x = -1
 
-        while True:
-            end[0] += shift_x
-            if reverseBrushfireMap[end[0], end[1]] != unknown:
-                break
+        # shift_y = 1
+        # if end[1] - start[1] > 0:
+        #     shift_y = -1
 
-            end[1] += shift_y
-            if reverseBrushfireMap[end[0], end[1]] != unknown:
-                break
+        # while True:
+        #     end[0] += shift_x
+        #     if reverseBrushfireMap[end[0], end[1]] != unknown:
+        #         break
+
+        #     end[1] += shift_y
+        #     if reverseBrushfireMap[end[0], end[1]] != unknown:
+        #         break
 
         rospy.logerr("Ends in unknown terrain!")
-        rospy.loginfo("New end:")
-        rospy.loginfo(end)
+        # rospy.loginfo("New end:")
+        # rospy.loginfo(end)
 
     open_list = []
     closed_list = []
