@@ -25,6 +25,7 @@ class Debris_Photography:
         self._reverseBrushfireMap = None
         self._map_loaded = False
         self._pose = [0, 0, 0]
+        self._first_detection = True
         self.max_speed = rospy.get_param('~max_speed', 0.4)
         self.max_steering = rospy.get_param('~max_steering', 0.37)
 
@@ -81,7 +82,9 @@ class Debris_Photography:
             for i in range(0, 10*wait):
                 rospy.loginfo("sleep")
                 self.cmd_vel_pub.publish(Twist())
-                rospy.sleep(wait/100)
+                rospy.sleep(0.1)
+            
+            self._first_detection = True
 
             # cv_image = self._cvbridge.imgmsg_to_cv2(self._image, desired_encoding='passthrough')
             # rospy.loginfo("Registered image:")
@@ -130,6 +133,14 @@ class Debris_Photography:
             if math.sqrt((i[0]-msg.position.x)**2+(i[1]-msg.position.y)**2) <= 1:
                 rospy.loginfo("Object already detected")
                 return
+
+        if self._first_detection:
+            self._first_detection = False
+            wait = 1 #seconds
+            for i in range(0, 10*wait):
+                rospy.loginfo("sleep")
+                self.cmd_vel_pub.publish(Twist())
+                rospy.sleep(0.1)
 
         self.approachDebris(msg.orientation.z,msg.position.z,msg.position.x,msg.position.y)
 
