@@ -18,7 +18,7 @@ class Debris_Photography:
         self._cvbridge = CvBridge()
         self._image = None
         self.obstacles = []
-        self.max_speed = rospy.get_param('~max_speed', 0.5)
+        self.max_speed = rospy.get_param('~max_speed', 0.4)
         self.max_steering = rospy.get_param('~max_steering', 0.37)
 
         self.cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=1)
@@ -37,10 +37,11 @@ class Debris_Photography:
     def approachDebris(self,angle,distance,x,y):
         goal_distance = 1.5
 
-        if abs(angle) < 0.05 and distance < 1.9:
+        if abs(angle) < 0.15 and distance < 1.9:
             rospy.loginfo("New object")
             wait = 5 #seconds
             for i in range(0, 10*wait):
+                rospy.loginfo("sleep")
                 self.cmd_vel_pub.publish(Twist())
                 rospy.sleep(wait/100)
 
@@ -53,8 +54,22 @@ class Debris_Photography:
             twist = Twist()
             twist.linear.x = self.clamp(distance-goal_distance, self.max_speed)
             twist.angular.z = self.clamp(angle, self.max_steering)
-            rospy.loginfo("twist")
-            rospy.loginfo(twist)
+            speed = self.clamp(distance-goal_distance, self.max_speed)
+            
+            if abs(speed) < 0.2:
+                    if speed < 0:
+                        speed = -0.2
+                    else:
+                        speed = 0.2
+                        
+            twist.linear.x = speed
+            if speed < 0:
+                twist.angular.z = -self.clamp(angle, self.max_steering)
+            else:
+                twist.angular.z = self.clamp(angle, self.max_steering)
+            
+            #rospy.loginfo("twist")
+            #rospy.loginfo(twist)
             self.cmd_vel_pub.publish(twist)
 
     def debris_callback(self, msg):
@@ -63,7 +78,12 @@ class Debris_Photography:
         # obj_dist = msg.position.z
         # obj_angle = msg.orientation.z
 
-        if abs(msg.orientation.z) > 1:
+        rospy.loginfo("Angle:")
+        rospy.loginfo(msg.orientation.z)
+        rospy.loginfo("Distance:")
+        rospy.loginfo(msg.position.z)
+
+        if abs(msg.orientation.z) > 1.0:
             return
         
         for i in self.obstacles:

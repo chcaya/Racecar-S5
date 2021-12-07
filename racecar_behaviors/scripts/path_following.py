@@ -26,8 +26,8 @@ class PathFollowing:
         self._id_goal = "id_goal"
         self._id_start = "id_start"
         self._id_obj = "id_obj"
-        # self._goal = [9.7, -3.0, math.pi, self._id_goal]
-        self._goal = [13.0, 2.1, math.pi, self._id_goal]
+        self._goal = [10.0, 0.0, math.pi, self._id_goal]
+        # self._goal = [13.0, 2.1, math.pi, self._id_goal]
         self._detected_objects = []
         self._object_data = [0, 0, 0, 0]
         self._cvbridge = CvBridge()
@@ -35,7 +35,7 @@ class PathFollowing:
 
         self._tf_listener = tf.TransformListener()
 
-        self.max_speed = rospy.get_param('~max_speed', 1)
+        self.max_speed = rospy.get_param('~max_speed', 0.4)
         self.max_steering = rospy.get_param('~max_steering', 0.37)
         self.cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=1)
         self.goal_pub = rospy.Publisher('/racecar/move_base/goal', MoveBaseActionGoal, queue_size=1, latch=True)
@@ -211,7 +211,8 @@ class PathFollowing:
                 self._detected_objects.append(self._object_data.copy())
                 cv_image = self._cvbridge.imgmsg_to_cv2(self._image, desired_encoding='passthrough')
                 rospy.loginfo("Registered image:")
-                rospy.loginfo(cv2.imwrite("pic.png", cv_image))
+                photo_str = "photo_" + str(len(self.obstacles)) + ".png"
+                rospy.loginfo(cv2.imwrite(photo_str, cv_image))
                 rospy.sleep(5)
 
             self.send_goal(self._goal)
