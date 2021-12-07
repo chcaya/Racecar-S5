@@ -4,6 +4,7 @@ import rospy
 import math
 import sys
 import cv2
+from cv_bridge import CvBridge
 import tf
 import numpy as np
 from tf.transformations import euler_from_quaternion
@@ -88,13 +89,84 @@ def a_star(reverseBrushfireMap, float_start, float_end):
     start = [int(i) for i in float_start]
     end = [int(i) for i in float_end]
 
+    rospy.loginfo("Start:")
+    rospy.loginfo(start)
+    rospy.loginfo(reverseBrushfireMap[start[0], start[1]])
+    rospy.loginfo("End:")
+    rospy.loginfo(end)
+    rospy.loginfo(reverseBrushfireMap[end[0], end[1]])
+
+    # for i in reverseBrushfireMap:
+    #     rospy.loginfo(i)
+
+
     unknown = -1
 
     if reverseBrushfireMap[start[0], start[1]] == unknown:
+
+        # reverseBrushfireMap[start[0]-1, start[1]]
+        # reverseBrushfireMap[start[0]-1, start[1]+1]
+        # reverseBrushfireMap[start[0], start[1]+1]
+        # reverseBrushfireMap[start[0]+1, start[1]+1]
+        # reverseBrushfireMap[start[0]+1, start[1]]
+        # reverseBrushfireMap[start[0]+1, start[1]-1]
+        # reverseBrushfireMap[start[0], start[1]-1]
+        # reverseBrushfireMap[start[0]-1, start[1]-1]
+
+
+        # next_list = [start]
+        # i = 0
+        # while True:
+        #     # rospy.loginfo(next_list)
+        #     # rospy.loginfo(i)
+        #     element = next_list[i]
+        #     if is_neighbour_clear(element, next_list, reverseBrushfireMap, [element[0]-1, element[1]], unknown, start):
+        #         break
+        #     if is_neighbour_clear(element, next_list, reverseBrushfireMap, [element[0], element[1]+1], unknown, start):
+        #         break
+        #     if is_neighbour_clear(element, next_list, reverseBrushfireMap, [element[0]+1, element[1]], unknown, start):
+        #         break
+        #     if is_neighbour_clear(element, next_list, reverseBrushfireMap, [element[0], element[1]-1], unknown, start):
+        #         break
+        #     i += 1
+
+
         rospy.logerr("Starts in unknown terrain!")
 
     if reverseBrushfireMap[end[0], end[1]] == unknown:
+        # next_list = [end]
+        # i = 0
+        # while True:
+        #     element = next_list[i]
+        #     if is_neighbour_clear(element, next_list, reverseBrushfireMap, [element[0]-1, element[1]], unknown, end):
+        #         break
+        #     if is_neighbour_clear(element, next_list, reverseBrushfireMap, [element[0], element[1]+1], unknown, end):
+        #         break
+        #     if is_neighbour_clear(element, next_list, reverseBrushfireMap, [element[0]+1, element[1]], unknown, end):
+        #         break
+        #     if is_neighbour_clear(element, next_list, reverseBrushfireMap, [element[0], element[1]-1], unknown, end):
+        #         break
+        #     i += 1
+        shift_x = 1
+        if end[0] - start[0] > 0:
+            shift_x = -1
+
+        shift_y = 1
+        if end[1] - start[1] > 0:
+            shift_y = -1
+
+        while True:
+            end[0] += shift_x
+            if reverseBrushfireMap[end[0], end[1]] != unknown:
+                break
+
+            end[1] += shift_y
+            if reverseBrushfireMap[end[0], end[1]] != unknown:
+                break
+
         rospy.logerr("Ends in unknown terrain!")
+        rospy.loginfo("New end:")
+        rospy.loginfo(end)
 
     open_list = []
     closed_list = []
@@ -157,6 +229,26 @@ def a_star(reverseBrushfireMap, float_start, float_end):
     # return testMap
 
     return aStarMap
+
+def is_neighbour_clear(og_coords, next_list, grid, coords, unknown, value):
+    if coords[0] < grid.shape[0] and coords[0] >= 0 and coords[1] < grid.shape[1] and coords[1] >= 0:
+        # rospy.loginfo(grid[coords[0], coords[1]])
+        if grid[coords[0], coords[1]] != unknown:
+            og_coords = coords
+            rospy.loginfo("Should escape loop")
+            value = coords
+            return True
+
+    should_append = False
+    for coords_in_list in next_list:
+        if coords_in_list[0] == coords[0] and coords_in_list[1] == coords[1]:
+            should_append = True
+            break
+
+    if not should_append:
+        next_list.append(coords)
+
+    return False
 
 def explore(open_list, closed_list, grid, coords, unknown):
     grid[coords[0], coords[1], 0] = 1
@@ -231,6 +323,25 @@ def find_path(start, end, closed_list):
         path.append(coords)
 
     return path
+
+def add_object(id, x, y, image, start, end, reverseBrushfireMap): 
+        # rospy.loginfo(start)
+        # rospy.loginfo(end)
+        cv_image = CvBridge().imgmsg_to_cv2(image, desired_encoding='passthrough')
+        photo_str = "photo_object_" + str(id) + ".png"
+        rospy.loginfo("Registered image:")
+        rospy.loginfo(cv2.imwrite("output_directory/" + photo_str, cv_image))
+        trajectory_str = "trajectory_object_" + str(id) + ".bmp"
+
+        aStarMap = a_star(reverseBrushfireMap, start, end)
+        mask = aStarMap == -1
+        aStarMap = aStarMap.astype(float) / float(np.amax(aStarMap)) * 225.0 + 30.0
+        aStarMap[mask] = 0
+        cv2.imwrite("output_directory/" + trajectory_str, cv2.transpose(aStarMap))
+
+        f = open("output_directory/Report.txt", "a")
+        f.write(str(x) + " " + str(y) + " " + photo_str + " " + trajectory_str + "\n")
+        f.close()
 
 def map_debug(grid, brushfireMap, reverseBrushfireMap, aStarMap):
     # Export brusfire map for visualization

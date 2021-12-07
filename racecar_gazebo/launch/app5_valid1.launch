@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <launch>
-  <!-- <include file="$(find racecar_gazebo)/launch/racecar_tunnel_genie.launch"/> -->
+  <include file="$(find racecar_gazebo)/launch/racecar_tunnel_genie.launch"/>
   <!-- roslaunch racecar_gazebo racecar_tunnel_genie.launch -->
 
-  <!-- <include file="$(find racecar_navigation)/launch/slam.launch">
+  <include file="$(find racecar_navigation)/launch/slam.launch">
     <arg name="localization" value="true"/>
-  </include> -->
+  </include>
   <!-- roslaunch racecar_navigation slam.launch localization:=true -->
 
   <include file="$(find racecar_navigation)/launch/rviz.launch"/>

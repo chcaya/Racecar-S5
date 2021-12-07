@@ -26,8 +26,8 @@ class PathFollowing:
         self._id_goal = "id_goal"
         self._id_start = "id_start"
         self._id_obj = "id_obj"
-        self._goal = [10.0, 0.0, math.pi, self._id_goal]
-        # self._goal = [13.0, 2.1, math.pi, self._id_goal]
+        # self._goal = [10.0, 0.0, math.pi, self._id_goal]
+        self._goal = [13.0, 2.1, math.pi, self._id_goal]
         self._detected_objects = []
         self._object_data = [0, 0, 0, 0]
         self._cvbridge = CvBridge()
