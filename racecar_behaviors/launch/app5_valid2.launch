@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<launch>
+ <include file="$(find racecar_bringup)/launch/gro830.launch"/>
+  <!-- roslaunch racecar_bringup gro830.launch -->
+
+  <include file="$(find racecar_navigation)/launch/slam.launch">
+    <arg name="localization" value="true"/>
+  </include>
+  <!-- roslaunch racecar_navigation slam.launch localization:=true -->
+
+  <include file="$(find racecar_navigation)/launch/navigation.launch"/>
+  <include file="$(find racecar_behaviors)/launch/blob_detection.launch"/>
+  <!-- <include file="$(find racecar_navigation)/launch/rviz.launch"/> -->
+  <!-- roslaunch racecar_navigation rviz.launch -->
+
+  <!-- <include file="$(find racecar_behaviors)/launch/behaviors.launch"/> -->
+  <!-- roslaunch racecar_behaviors behaviors.launch -->
+</launch>
