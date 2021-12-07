@@ -89,10 +89,10 @@ class Debris_Photography:
             speed = self.clamp(distance-goal_distance, self.max_speed)
             
             if abs(speed) < 0.2:
-                    if speed < 0:
-                        speed = -0.2
-                    else:
-                        speed = 0.2
+                if speed < 0:
+                    speed = -0.2
+                else:
+                    speed = 0.2
                         
             twist.linear.x = speed
             if speed < 0:

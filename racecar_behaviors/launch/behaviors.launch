@@ -31,7 +31,7 @@
     </node>
 
     <node pkg="racecar_behaviors" type="debris_photography.py" name="debris_photography" output="screen">
-       <remap from="cmd_vel" to="cmd_vel_abtr_2"/>
+       <remap from="cmd_vel" to="cmd_vel_abtr_3"/>
     </node>
 
   </group>
